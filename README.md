@@ -4,7 +4,7 @@
   <p align="center">
     <a href="https://pypi.org/project/hashcrack-cli/"><img src="https://img.shields.io/pypi/v/hashcrack-cli?color=blue&style=flat-square" alt="PyPI"></a>
     <a href="https://pypi.org/project/hashcrack-cli/"><img src="https://img.shields.io/pypi/pyversions/hashcrack-cli?style=flat-square" alt="Python"></a>
-    <a href="https://github.com/shazeus/hashcrack/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License"></a>
+    <a href="https://github.com/shazeus/hashcrack/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License"></a>
     <a href="https://github.com/shazeus/hashcrack/stargazers"><img src="https://img.shields.io/github/stars/shazeus/hashcrack?style=flat-square" alt="Stars"></a>
   </p>
 </p>
