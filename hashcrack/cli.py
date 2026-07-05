@@ -262,26 +262,23 @@ def batch(input_file: str, do_lookup: bool, output: Optional[str], output_json: 
     lines = [l.strip() for l in path.read_text().splitlines() if l.strip() and not l.startswith("#")]
 
     if not lines:
+        if output_json:
+            click.echo("[]")
+            return
         console.print("[red]No hashes found in file.[/red]")
         sys.exit(1)
 
-    console.print(Panel(
-        f"Processing [bold]{len(lines)}[/bold] hash(es) from [cyan]{path.name}[/cyan]",
-        title="[bold]Batch Mode[/bold]",
-        border_style="blue",
-    ))
+    if not output_json:
+        console.print(Panel(
+            f"Processing [bold]{len(lines)}[/bold] hash(es) from [cyan]{path.name}[/cyan]",
+            title="[bold]Batch Mode[/bold]",
+            border_style="blue",
+        ))
 
     all_results = []
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
-        task = progress.add_task(f"Processing...", total=len(lines))
-
-        for i, line in enumerate(lines, 1):
-            progress.update(task, description=f"[{i}/{len(lines)}] {line[:32]}...")
+    if output_json:
+        for line in lines:
             matches = detect_hash(line)
             entry = {
                 "hash": line,
@@ -294,7 +291,29 @@ def batch(input_file: str, do_lookup: bool, output: Optional[str], output_json: 
                 result = lookup_hash(line)
                 entry.update(result)
             all_results.append(entry)
-            progress.advance(task)
+    else:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Processing...", total=len(lines))
+
+            for i, line in enumerate(lines, 1):
+                progress.update(task, description=f"[{i}/{len(lines)}] {line[:32]}...")
+                matches = detect_hash(line)
+                entry = {
+                    "hash": line,
+                    "types": [m["name"] for m in matches],
+                    "found": False,
+                    "plaintext": None,
+                    "source": None,
+                }
+                if do_lookup and matches:
+                    result = lookup_hash(line)
+                    entry.update(result)
+                all_results.append(entry)
+                progress.advance(task)
 
     if output_json:
         click.echo(json.dumps(all_results, indent=2))
@@ -325,9 +344,10 @@ def batch(input_file: str, do_lookup: bool, output: Optional[str], output_json: 
 
     if output:
         Path(output).write_text(json.dumps(all_results, indent=2))
-        console.print(f"\n[dim]Results saved to [cyan]{output}[/cyan][/dim]")
+        if not output_json:
+            console.print(f"\n[dim]Results saved to [cyan]{output}[/cyan][/dim]")
 
-    if do_lookup:
+    if do_lookup and not output_json:
         found_count = sum(1 for r in all_results if r["found"])
         console.print(
             f"\n[bold]Summary:[/bold] {found_count}/{len(all_results)} hashes cracked "
